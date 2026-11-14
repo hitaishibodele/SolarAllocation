@@ -1,0 +1,7 @@
+name,energy_demand_kwh_day,rooftop_area_m2,solar_potential_pct
+Library,500,1200,90
+Laboratory,700,800,85
+Hostel,900,1500,80
+Canteen,350,600,75
+Auditorium,400,1000,60
+Administration,300,700,85
