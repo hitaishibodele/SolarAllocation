@@ -76,3 +76,23 @@ class TestPageRenders:
         at.session_state["edges"] = []
         at.radio[0].set_value(page).run()
         assert not at.exception, f"{page} (empty): {at.exception}"
+
+
+def test_k4_preset_updates_shared_graph_analysis():
+    at = AppTest.from_file(APP, default_timeout=TIMEOUT)
+    at.run()
+    at.radio[0].set_value("Graph Theory").run()
+    assert any(tab.label == "🏫 Campus Graph" for tab in at.tabs)
+    at.radio(key="gt_source").set_value("Custom graph").run()
+    preset = at.selectbox(key="gt_preset")
+    preset.set_value(next(option for option in preset.options if "Complete K" in option)).run()
+
+    adjacency = next(
+        table.value for table in at.dataframe
+        if list(table.value.index) == ["A", "B", "C", "D"]
+        and list(table.value.columns) == ["A", "B", "C", "D"]
+    )
+    assert adjacency.values.sum() == 12
+    assert any("Complete K₄" in caption.value for caption in at.caption)
+    assert not any(tab.label == "🏫 Campus Graph" for tab in at.tabs)
+    assert not at.exception

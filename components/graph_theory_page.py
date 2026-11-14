@@ -80,24 +80,22 @@ def render_graph_theory_page() -> None:
             net = build_network(E, edges_in)
             vertices_c, g_edges_c = net["vertices"], net["edges"]
     G = gt.graph_source(vertices_c, g_edges_c)
-    t = st.tabs(["🏫 Campus Graph", "🧮 Representations", "🔄 Euler", "🔁 Hamiltonian",
-                 "🌳 Trees", "🎨 Bipartite & Planar", "🖌️ Colouring", "🔗 Matching"])
-    with t[0]:
-        _campus_tab(df, thresholds, edges_in, vertices_c, g_edges_c)
-    with t[1]:
-        gt.repr_tab(G)
-    with t[2]:
-        gt.euler_tab(G)
-    with t[3]:
-        gt.ham_tab(G)
-    with t[4]:
-        gt.tree_tab(G)
-    with t[5]:
-        gt.bip_tab(G)
-    with t[6]:
-        gt.colour_tab(G)
-    with t[7]:
-        gt.matching_tab()
+    tab_specs = [
+        ("🏫 Campus Graph", lambda: _campus_tab(df, thresholds, edges_in, vertices_c, g_edges_c)),
+        ("🧮 Representations", lambda: gt.repr_tab(G)),
+        ("🔄 Euler", lambda: gt.euler_tab(G)),
+        ("🔁 Hamiltonian", lambda: gt.ham_tab(G)),
+        ("🌳 Trees", lambda: gt.tree_tab(G)),
+        ("🎨 Bipartite & Planar", lambda: gt.bip_tab(G)),
+        ("🖌️ Colouring", lambda: gt.colour_tab(G)),
+        ("🔗 Matching", gt.matching_tab),
+    ]
+    if G["source"] == "Custom graph":
+        tab_specs = tab_specs[1:]
+    tabs = st.tabs([label for label, _ in tab_specs])
+    for tab, (_, render) in zip(tabs, tab_specs):
+        with tab:
+            render()
 
 
 # ---------------------------------------------------------------------------

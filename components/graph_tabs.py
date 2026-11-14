@@ -66,12 +66,22 @@ def _load_preset() -> None:
         st.session_state["gt_e"] = "\n".join(f"{u},{v}" for u, v in p[1])
 
 
+def _graph_label(parsed, directed: bool) -> str:
+    if not directed:
+        vertices = set(parsed["vertices"])
+        edges = {frozenset(edge) for edge in parsed["und"]}
+        for name, (preset_vertices, preset_edges) in _PRESETS.items():
+            if vertices == set(preset_vertices) and edges == {frozenset(edge) for edge in preset_edges}:
+                return name
+    return "Custom directed graph" if directed else "Custom graph"
+
+
 def graph_source(c_vertices, c_edges) -> dict:
     src = st.radio("Graph to analyse (used by every tab except Campus Graph and Matching)",
                    ["Campus graph", "Custom graph"], horizontal=True, key="gt_source")
     if src == "Campus graph":
         ok = len(c_vertices) > 0
-        return {"label": "Campus graph", "vertices": list(c_vertices), "edges": list(c_edges),
+        return {"source": src, "label": "Campus graph", "vertices": list(c_vertices), "edges": list(c_edges),
                 "und": list(c_edges), "directed": False, "ok": ok,
                 "reason": "No building is eligible. Change thresholds on Sets, or choose Custom graph."}
     if "gt_v" not in st.session_state:
@@ -89,9 +99,14 @@ def graph_source(c_vertices, c_edges) -> dict:
     if P["errors"]:
         for e in P["errors"]:
             callout(e, "error")
-        return {"label": "Custom graph", "vertices": [], "edges": [], "und": [], "directed": directed,
+        return {"source": src, "label": "Custom graph", "vertices": [], "edges": [], "und": [], "directed": directed,
                 "ok": False, "reason": "Fix the custom graph above to continue."}
-    return {"label": "Custom graph", "vertices": P["vertices"], "edges": P["edges"], "und": P["und"],
+    label = _graph_label(P, directed)
+    st.caption(
+        f"Analyzing **{label}**: {len(P['vertices'])} vertices, {len(P['edges'])} edges. "
+        "Campus Graph is hidden; Matching uses a separate graph."
+    )
+    return {"source": src, "label": label, "vertices": P["vertices"], "edges": P["edges"], "und": P["und"],
             "directed": directed, "ok": True, "reason": ""}
 
 
